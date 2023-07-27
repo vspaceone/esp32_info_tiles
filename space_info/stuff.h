@@ -1,6 +1,9 @@
 std::map<String, uint8_t> name_to_sprite{
   { "none", 255},
-  { "ha", 0}
+  { "building_power", 3},
+  { "window", 2},
+  { "door", 1},
+  { "dishwasher", 0}
 };
 
 void init_vga_ota() {

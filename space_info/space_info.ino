@@ -155,7 +155,7 @@ void setup() {
   Serial.println("VGA...");
   Mode monitor_res = vga.MODE800x600.custom(640, 512);
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
-  vga.setFont(CodePage437_8x8);
+  vga.setFont(CodePage437_8x14);
   vga.clear(0);
 
   //WiFi
