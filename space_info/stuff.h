@@ -89,3 +89,17 @@ void init_vga_ota() {
       delay(5000);
     });
 }
+
+void wm_ap_c(WiFiManager *myWiFiManager) {
+  Serial.print(F("WiFi not found. Please configure via AP."));
+  vga.println("ERROR");
+  vga.clear(vga.RGB(255, 0, 0));
+  vga.backColor = vga.RGB(255, 0, 0);
+  vga.setTextColor(vga.RGB(0, 0, 0));
+
+  vga.println("Please configure WiFi via AP.");
+  vga.print("SSID: ");
+  vga.println(conf_ssid);
+  vga.print("PASS: ");
+  vga.println(conf_pass);
+}

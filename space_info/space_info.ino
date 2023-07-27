@@ -16,10 +16,14 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #include <LittleFS.h>
 
 #include "sprites.h"
-#include "stuff.h"
 
 VGA3Bit vga;
 WebServer srv;
+
+const char* conf_ssid = "space_info config AP";
+const char* conf_pass = "PLEASE_change_me";
+
+#include "stuff.h"
 
 auto color_ok = vga.RGB(0, 255, 255);
 auto color_bad = vga.RGB(255, 0, 255);
@@ -38,7 +42,8 @@ String layout_path = "/layout.json";
 DynamicJsonDocument layout(8192);
 std::map<String, uint8_t> states{};
 
-auto st_to_col(uint8_t s) {
+typedef typeof vga.RGB(0,0,0) vga_color_t;
+vga_color_t st_to_col(uint8_t s) {
   switch (s) {
     default: return color_unknown; break;
     case 1: return color_bad; break;
@@ -64,8 +69,8 @@ Icon
 void draw_block(String name) {
   if (!layout.containsKey(name)) return;
 
-  uint16_t x = layout[name]["x"] * BLOCK_SIZE;
-  uint16_t y = layout[name]["y"] * BLOCK_SIZE;
+  uint16_t x = layout[name]["x"].as<uint8_t>() * BLOCK_SIZE;
+  uint16_t y = layout[name]["y"].as<uint8_t>() * BLOCK_SIZE;
   auto c = st_to_col(states[name]);
 
   //Draw rect
@@ -82,15 +87,16 @@ void draw_block(String name) {
   vga.setTextColor(c);
   for (uint8_t l = 0; l < 3; l++) {
     vga.setCursor(x, y + 80 + (l * 16));
-    vga.print(layout[name]["desc"][l]);
+    const char* line = layout[name]["desc"][l];
+    vga.print(line);
   }
   vga.setTextColor(white);
 }
 
 void draw_all_blocks() {
-  JsonObject root = doc.as<JsonObject>();
+  JsonObject root = layout.as<JsonObject>();
   for (JsonPair kv : root) {
-    draw_block(kv.key());
+    draw_block(kv.key().c_str());
   }
 }
 
@@ -114,7 +120,7 @@ void handle_state_update() {
         if (jval == "on") val = 2;
         else if (jval == "off") val = 1;
         else val = 0;
-        states[kv.key().as<String>()] = val;
+        states[kv.key().c_str()] = val;
       }
       draw_all_blocks();
 
@@ -166,7 +172,7 @@ void setup() {
   wm.setConfigPortalTimeout(180);
   WiFi.hostname("space_info");
   wm.setAPCallback(wm_ap_c);
-  if (!wm.autoConnect(conf_ssid, conf_pass)) {
+  if (!wm.autoConnect(conf_ssid,conf_pass)) {
     ESP.restart();
   }
   vga.println("OK");
@@ -200,8 +206,8 @@ void setup() {
   srv.on("/layout", HTTP_GET, []() {
     uint32_t size = measureJson(layout) + 1;
     char buf[size];
-    serializeJson(layout, buf);
-    srv.send(200, "application/json", buf, size);
+    serializeJson(layout, buf, size);
+    srv.send(200, "application/json", buf);
   });
   srv.on("/layout", HTTP_POST, handle_state_update);
   srv.begin();
