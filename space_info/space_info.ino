@@ -42,7 +42,7 @@ String layout_path = "/layout.json";
 DynamicJsonDocument layout(8192);
 std::map<String, uint8_t> states{};
 
-typedef typeof vga.RGB(0,0,0) vga_color_t;
+typedef typeof vga.RGB(0, 0, 0) vga_color_t;
 vga_color_t st_to_col(uint8_t s) {
   switch (s) {
     default: return color_unknown; break;
@@ -94,6 +94,7 @@ void draw_block(String name) {
 }
 
 void draw_all_blocks() {
+  vga.clear(0);
   JsonObject root = layout.as<JsonObject>();
   for (JsonPair kv : root) {
     draw_block(kv.key().c_str());
@@ -172,10 +173,11 @@ void setup() {
   wm.setConfigPortalTimeout(180);
   WiFi.hostname("space_info");
   wm.setAPCallback(wm_ap_c);
-  if (!wm.autoConnect(conf_ssid,conf_pass)) {
+  if (!wm.autoConnect(conf_ssid, conf_pass)) {
     ESP.restart();
   }
   vga.println("OK");
+  delay(100);
 
   //OTA
   Serial.println("OTA... ");
@@ -185,6 +187,7 @@ void setup() {
   ArduinoOTA.setHostname("space_info");
   ArduinoOTA.begin();
   vga.println("OK");
+  delay(100);
 
   //LittleFS
   Serial.println("LittleFS... ");
@@ -194,6 +197,21 @@ void setup() {
     Serial.println("ERROR");
     vga.println("ERROR");
   } else vga.println("OK");
+  delay(100);
+
+  //Read config
+  Serial.println("Config... ");
+  vga.clear(0);
+  vga.print("Config... ");
+  File lf = LittleFS.open(layout_path, FILE_READ);
+  auto err = deserializeJson(layout, lf);
+  lf.close();
+  if (err != DeserializationError::Ok) {
+    Serial.println("ERROR");
+    vga.println("ERROR");
+  } else vga.println("OK");
+  delay(100);
+
 
   //REST Server
   Serial.println("REST... ");
@@ -212,8 +230,8 @@ void setup() {
   srv.on("/layout", HTTP_POST, handle_state_update);
   srv.begin();
   vga.println("OK");
+  delay(100);
 
-  vga.clear(0);
   draw_all_blocks();
 }
 
