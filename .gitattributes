@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+space_info/sprites.h linguist-vendored
+icons/** linguist-vendored
