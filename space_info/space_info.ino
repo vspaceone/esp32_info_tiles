@@ -6,9 +6,9 @@ Layout is grid of blocks. Each block has an icon and text. Status is shown as co
 Homeassistant sends states via REST. Uses jinja templating of homeassistant to insert states.
 */
 
-#include <ESP32Lib.h>  //https://github.com/bitluni/ESP32Lib
-#include <WiFiManager.h>
-#include <ArduinoJson.h>
+#include <ESP32Lib.h>     //https://github.com/bitluni/ESP32Lib
+#include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager/
+#include <ArduinoJson.h>  //https://arduinojson.org/
 #include <Ressources/CodePage437_8x14.h>
 #include <WebServer.h>
 #include <ArduinoOTA.h>
@@ -118,12 +118,8 @@ void handle_state_update() {
     DynamicJsonDocument doc(4096);
     auto err = deserializeJson(layout, json);
     if (err == DeserializationError::Ok) {
-
       JsonObject root = doc.as<JsonObject>();
-      for (JsonPair kv : root) 
-        draw_block(kv.key().c_str(), ha_to_st(kv.value()));
-      }
-
+      for (JsonPair kv : root) draw_block(kv.key().c_str(), ha_to_st(kv.value()));  //draw all received blocks
       srv.send(200, "application/json", "{\"success\":\"states set\"}");
     } else {
       String err_txt = "{\"error\":\"";
@@ -159,7 +155,7 @@ void setup() {
 
   //VGA
   Serial.println("VGA...");
-  Mode monitor_res = vga.MODE500x480.custom(384, 384);
+  Mode monitor_res = vga.MODE400x300.custom(384, 256);
   //vga.setFrameBufferCount(2);
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
   vga.setFont(CodePage437_8x14);
@@ -237,33 +233,33 @@ void setup() {
       ddc.setPower(val - 1);
       srv.send(200, "text/plain", "ok");
     }
-});
-srv.on("/brightness", HTTP_POST, []() {
-  uint8_t brght = srv.arg("plain").toInt();
-  ddc.setBrightness(brght);
-  srv.send(200, "text/plain", "ok");
-});
-srv.begin();
-vga.println("OK");
-vga.show();
-
-// DDC/CI
-Serial.print("DDC... ");
-vga.print("DDC... ");
-vga.show();
-Wire.begin(sdaPin, sclPin);
-if (ddc.begin()) {
-  Serial.println("OK");
+  });
+  srv.on("/brightness", HTTP_POST, []() {
+    uint8_t brght = srv.arg("plain").toInt();
+    ddc.setBrightness(brght);
+    srv.send(200, "text/plain", "ok");
+  });
+  srv.begin();
   vga.println("OK");
   vga.show();
-} else {
-  Serial.println("ERROR");
-  vga.println("ERROR");
-  vga.show();
-}
 
-vga.println("Waiting for data... ");
-vga.show();
+  // DDC/CI
+  Serial.print("DDC... ");
+  vga.print("DDC... ");
+  vga.show();
+  Wire.begin(sdaPin, sclPin);
+  if (ddc.begin()) {
+    Serial.println("OK");
+    vga.println("OK");
+    vga.show();
+  } else {
+    Serial.println("ERROR");
+    vga.println("ERROR");
+    vga.show();
+  }
+
+  vga.println("Waiting for data... ");
+  vga.show();
 }
 
 void loop() {

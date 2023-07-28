@@ -91,7 +91,7 @@ void init_vga_ota() {
 }
 
 void wm_ap_c(WiFiManager *myWiFiManager) {
-  Serial.print(F("WiFi not found. Please configure via AP."));
+  Serial.println(F("WiFi not found. Please configure via AP."));
   vga.println("ERROR");
   vga.clear(vga.RGB(255, 0, 0));
   vga.backColor = vga.RGB(255, 0, 0);
