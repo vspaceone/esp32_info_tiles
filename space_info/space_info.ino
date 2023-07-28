@@ -32,6 +32,7 @@ auto color_ok = vga.RGB(0, 255, 255);
 auto color_bad = vga.RGB(255, 0, 255);
 auto color_unknown = vga.RGB(255, 255, 0);
 auto white = vga.RGB(255, 255, 255);
+auto black = vga.RGB(0,0,0);
 
 const int redPin = 27;
 const int greenPin = 26;
@@ -45,7 +46,6 @@ const int sclPin = 32;
 String layout_path = "/layout.json";
 
 DynamicJsonDocument layout(8192);
-std::map<String, uint8_t> states{};
 
 typedef typeof vga.RGB(0, 0, 0) vga_color_t;
 vga_color_t st_to_col(uint8_t s) {
@@ -71,14 +71,15 @@ Icon
 }
 */
 
-void draw_block(String name) {
+void draw_block(String name, uint8_t state) {
   if (!layout.containsKey(name)) return;
 
   uint16_t x = layout[name]["x"].as<uint8_t>() * BLOCK_SIZE;
   uint16_t y = layout[name]["y"].as<uint8_t>() * BLOCK_SIZE;
-  auto c = st_to_col(states[name]);
+  auto c = st_to_col(state);
 
-  //Draw rect
+  //clear space and draw rect
+  vga.fillRect(x+1, y+1, BLOCK_SIZE-1, BLOCK_SIZE-1, black);
   vga.rect(x, y, BLOCK_SIZE, BLOCK_SIZE, c);
 
   //Draw icon
@@ -96,16 +97,9 @@ void draw_block(String name) {
     vga.print(line);
   }
   vga.setTextColor(white);
-}
 
-void draw_all_blocks() {
-  vga.clear(0);
-  JsonObject root = layout.as<JsonObject>();
-  for (JsonPair kv : root) {
-    draw_block(kv.key().c_str());
-  }
+  vga.show();
 }
-
 
 /*
 { "binary_sensor.window_1: "on",
@@ -126,9 +120,8 @@ void handle_state_update() {
         if (jval == "on") val = 2;
         else if (jval == "off") val = 1;
         else val = 0;
-        states[kv.key().c_str()] = val;
+        draw_block(kv.key().c_str(), val);
       }
-      draw_all_blocks();
 
       srv.send(200, "application/json", "{\"success\":\"states set\"}");
     } else {
@@ -166,7 +159,7 @@ void setup() {
   //VGA
   Serial.println("VGA...");
   Mode monitor_res = vga.MODE800x600.custom(640, 512);
-  vga.setFrameBufferCount(2);
+  //vga.setFrameBufferCount(2);
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
   vga.setFont(CodePage437_8x14);
   vga.clear(0);
@@ -261,5 +254,6 @@ void setup() {
 
 void loop() {
   srv.handleClient();
+  ArduinoOTA.handle();
   delay(5);
 }
