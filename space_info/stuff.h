@@ -102,4 +102,5 @@ void wm_ap_c(WiFiManager *myWiFiManager) {
   vga.println(conf_ssid);
   vga.print("PASS: ");
   vga.println(conf_pass);
+  vga.show();
 }

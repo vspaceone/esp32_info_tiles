@@ -6,7 +6,7 @@ Layout is grid of blocks. Each block has an icon and text. Status is shown as co
 Homeassistant sends states via REST. Uses jinja templating of homeassistant to insert states.
 */
 
-#include <ESP32Lib.h>
+#include <ESP32Lib.h>  //https://github.com/bitluni/ESP32Lib
 #include <WiFiManager.h>
 #include <ArduinoJson.h>
 #include <Ressources/CodePage437_8x14.h>
@@ -14,11 +14,14 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #include <ArduinoOTA.h>
 #include <map>
 #include <LittleFS.h>
+#include <Wire.h>
+#include <DDCVCP.h>  //https://github.com/tttttx2/ddcvcp
 
 #include "sprites.h"
 
 VGA3Bit vga;
 WebServer srv;
+DDCVCP ddc;
 
 const char* conf_ssid = "space_info config AP";
 const char* conf_pass = "PLEASE_change_me";
@@ -30,11 +33,13 @@ auto color_bad = vga.RGB(255, 0, 255);
 auto color_unknown = vga.RGB(255, 255, 0);
 auto white = vga.RGB(255, 255, 255);
 
-const int redPin = 14;
-const int greenPin = 19;
-const int bluePin = 27;
-const int hsyncPin = 32;
-const int vsyncPin = 33;
+const int redPin = 27;
+const int greenPin = 26;
+const int bluePin = 25;
+const int hsyncPin = 12;
+const int vsyncPin = 14;
+const int sdaPin = 33;
+const int sclPin = 32;
 
 #define BLOCK_SIZE 128  //each block is 128x128
 String layout_path = "/layout.json";
@@ -161,14 +166,15 @@ void setup() {
   //VGA
   Serial.println("VGA...");
   Mode monitor_res = vga.MODE800x600.custom(640, 512);
+  vga.setFrameBufferCount(2);
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
   vga.setFont(CodePage437_8x14);
   vga.clear(0);
 
   //WiFi
   Serial.println("WiFi... ");
-  vga.clear(0);
   vga.print("WiFi... ");
+  vga.show();
   WiFiManager wm;
   wm.setConfigPortalTimeout(180);
   WiFi.hostname("space_info");
@@ -177,32 +183,34 @@ void setup() {
     ESP.restart();
   }
   vga.println("OK");
-  delay(100);
+  vga.print("IP is ");
+  vga.println(WiFi.localIP());
+  vga.show();
 
   //OTA
   Serial.println("OTA... ");
-  vga.clear(0);
   vga.print("OTA... ");
+  vga.show();
   init_vga_ota();
   ArduinoOTA.setHostname("space_info");
   ArduinoOTA.begin();
   vga.println("OK");
-  delay(100);
+  vga.show();
 
   //LittleFS
   Serial.println("LittleFS... ");
-  vga.clear(0);
   vga.print("LittleFS... ");
+  vga.show();
   if (!LittleFS.begin(true)) {
     Serial.println("ERROR");
     vga.println("ERROR");
   } else vga.println("OK");
-  delay(100);
+  vga.show();
 
   //Read config
   Serial.println("Config... ");
-  vga.clear(0);
   vga.print("Config... ");
+  vga.show();
   File lf = LittleFS.open(layout_path, FILE_READ);
   auto err = deserializeJson(layout, lf);
   lf.close();
@@ -210,13 +218,13 @@ void setup() {
     Serial.println("ERROR");
     vga.println("ERROR");
   } else vga.println("OK");
-  delay(100);
+  vga.show();
 
 
   //REST Server
   Serial.println("REST... ");
-  vga.clear(0);
   vga.print("REST... ");
+  vga.show();
   srv.on("/", []() {
     srv.send(200, "text/plain", "API Documentation at: [TODO]");
   });
@@ -230,9 +238,25 @@ void setup() {
   srv.on("/layout", HTTP_POST, handle_state_update);
   srv.begin();
   vga.println("OK");
-  delay(100);
+  vga.show();
 
-  draw_all_blocks();
+  // DDC/CI
+  Serial.print("DDC... ");
+  vga.print("DDC... ");
+  vga.show();
+  Wire.begin(sdaPin, sclPin);
+  if (ddc.begin()) {
+    Serial.println("OK");
+    vga.println("OK");
+    vga.show();
+  } else {
+    Serial.println("ERROR");
+    vga.println("ERROR");
+    vga.show();
+  }
+
+  vga.println("Waiting for data... ");
+  vga.show();
 }
 
 void loop() {
