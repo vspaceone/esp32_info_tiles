@@ -32,7 +32,7 @@ auto color_ok = vga.RGB(0, 255, 255);
 auto color_bad = vga.RGB(255, 0, 255);
 auto color_unknown = vga.RGB(255, 255, 0);
 auto white = vga.RGB(255, 255, 255);
-auto black = vga.RGB(0,0,0);
+auto black = vga.RGB(0, 0, 0);
 
 const int redPin = 27;
 const int greenPin = 26;
@@ -79,7 +79,7 @@ void draw_block(String name, uint8_t state) {
   auto c = st_to_col(state);
 
   //clear space and draw rect
-  vga.fillRect(x+1, y+1, BLOCK_SIZE-1, BLOCK_SIZE-1, black);
+  vga.fillRect(x + 1, y + 1, BLOCK_SIZE - 1, BLOCK_SIZE - 1, black);
   vga.rect(x, y, BLOCK_SIZE, BLOCK_SIZE, c);
 
   //Draw icon
@@ -101,6 +101,13 @@ void draw_block(String name, uint8_t state) {
   vga.show();
 }
 
+uint8_t ha_to_st(String jval) {
+  jval.toLowerCase();
+  if (jval == "on") return 2;
+  else if (jval == "off") return 1;
+  else return 0;
+}
+
 /*
 { "binary_sensor.window_1: "on",
   "binary_sensor.window_2": off }
@@ -113,14 +120,8 @@ void handle_state_update() {
     if (err == DeserializationError::Ok) {
 
       JsonObject root = doc.as<JsonObject>();
-      for (JsonPair kv : root) {
-        String jval = kv.value();
-        jval.toLowerCase();
-        uint8_t val;
-        if (jval == "on") val = 2;
-        else if (jval == "off") val = 1;
-        else val = 0;
-        draw_block(kv.key().c_str(), val);
+      for (JsonPair kv : root) 
+        draw_block(kv.key().c_str(), ha_to_st(kv.value()));
       }
 
       srv.send(200, "application/json", "{\"success\":\"states set\"}");
@@ -158,7 +159,7 @@ void setup() {
 
   //VGA
   Serial.println("VGA...");
-  Mode monitor_res = vga.MODE800x600.custom(640, 512);
+  Mode monitor_res = vga.MODE500x480.custom(384, 384);
   //vga.setFrameBufferCount(2);
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
   vga.setFont(CodePage437_8x14);
@@ -229,27 +230,40 @@ void setup() {
     srv.send(200, "application/json", buf);
   });
   srv.on("/layout", HTTP_POST, handle_state_update);
-  srv.begin();
+  srv.on("/power", HTTP_POST, []() {
+    uint8_t val = ha_to_st(srv.arg("plain"));
+    if (val != 0) srv.send(400, "text/plain", "bad format");
+    else {
+      ddc.setPower(val - 1);
+      srv.send(200, "text/plain", "ok");
+    }
+});
+srv.on("/brightness", HTTP_POST, []() {
+  uint8_t brght = srv.arg("plain").toInt();
+  ddc.setBrightness(brght);
+  srv.send(200, "text/plain", "ok");
+});
+srv.begin();
+vga.println("OK");
+vga.show();
+
+// DDC/CI
+Serial.print("DDC... ");
+vga.print("DDC... ");
+vga.show();
+Wire.begin(sdaPin, sclPin);
+if (ddc.begin()) {
+  Serial.println("OK");
   vga.println("OK");
   vga.show();
-
-  // DDC/CI
-  Serial.print("DDC... ");
-  vga.print("DDC... ");
+} else {
+  Serial.println("ERROR");
+  vga.println("ERROR");
   vga.show();
-  Wire.begin(sdaPin, sclPin);
-  if (ddc.begin()) {
-    Serial.println("OK");
-    vga.println("OK");
-    vga.show();
-  } else {
-    Serial.println("ERROR");
-    vga.println("ERROR");
-    vga.show();
-  }
+}
 
-  vga.println("Waiting for data... ");
-  vga.show();
+vga.println("Waiting for data... ");
+vga.show();
 }
 
 void loop() {
