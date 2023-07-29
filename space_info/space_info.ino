@@ -216,7 +216,11 @@ void setup() {
   vga.print("REST... ");
   vga.show();
   srv.on("/", []() {
-    srv.send(200, "text/plain", "API Documentation at: [TODO]");
+    String resp = "API Documentation at: [TODO]\nFree Heap: ";
+    resp += ESP.getFreeHeap();
+    resp += "\nRSSI: ";
+    resp += WiFi.RSSI();
+    srv.send(200, "text/plain", resp);
   });
   srv.on("/layout", HTTP_POST, handle_layout);
   srv.on("/layout", HTTP_GET, []() {
