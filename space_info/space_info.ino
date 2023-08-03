@@ -6,8 +6,10 @@ Layout is grid of blocks. Each block has an icon and text. Status is shown as co
 Homeassistant sends states via REST. Uses jinja templating of homeassistant to insert states.
 */
 
-#include <ESP32Lib.h>     //https://github.com/bitluni/ESP32Lib
+#include <ESP32Lib.h>  //https://github.com/bitluni/ESP32Lib
+#ifdef USE_WM
 #include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager/
+#endif
 #include <ArduinoJson.h>  //https://arduinojson.org/
 #include <Ressources/CodePage437_8x14.h>
 #include <WebServer.h>
@@ -16,7 +18,10 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #include <LittleFS.h>
 #include <Wire.h>
 #include <DDCVCP.h>  //https://github.com/tttttx2/ddcvcp
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
+#include "config.h"
 #include "sprites.h"
 
 VGA3Bit vga;
@@ -34,13 +39,13 @@ auto color_unknown = vga.RGB(255, 255, 0);
 auto white = vga.RGB(255, 255, 255);
 auto black = vga.RGB(0, 0, 0);
 
-const int redPin = 27;
-const int greenPin = 26;
-const int bluePin = 25;
-const int hsyncPin = 12;
-const int vsyncPin = 14;
-const int sdaPin = 33;
-const int sclPin = 32;
+const int redPin = 12;
+const int greenPin = 13;
+const int bluePin = 15;
+const int hsyncPin = 14;
+const int vsyncPin = 2;
+const int sdaPin = 16;
+const int sclPin = 0;
 
 #define BLOCK_SIZE 128  //each block is 128x128
 String layout_path = "/layout.json";
@@ -149,6 +154,9 @@ void handle_layout() {
 }
 
 void setup() {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+  delay(10000);
+
   Serial.begin(115200);
   Serial.print("\nvspace.one Info-Monitor, compiled ");
   Serial.println(__DATE__);
@@ -165,6 +173,7 @@ void setup() {
   Serial.println("WiFi... ");
   vga.print("WiFi... ");
   vga.show();
+#ifdef USE_WM
   WiFiManager wm;
   wm.setConfigPortalTimeout(180);
   WiFi.hostname("space_info");
@@ -172,6 +181,15 @@ void setup() {
   if (!wm.autoConnect(conf_ssid, conf_pass)) {
     ESP.restart();
   }
+#else
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(wifi_ssid, wifi_pass);
+  while (!WiFi.isConnected()) {
+    Serial.print('.');
+    vga.print(".");
+    delay(1000);
+  }
+#endif
   vga.println("OK");
   vga.print("IP is ");
   vga.println(WiFi.localIP());

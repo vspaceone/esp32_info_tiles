@@ -90,6 +90,7 @@ void init_vga_ota() {
     });
 }
 
+#ifdef USE_WM
 void wm_ap_c(WiFiManager *myWiFiManager) {
   Serial.println(F("WiFi not found. Please configure via AP."));
   vga.println("ERROR");
@@ -104,3 +105,4 @@ void wm_ap_c(WiFiManager *myWiFiManager) {
   vga.println(conf_pass);
   vga.show();
 }
+#endif
