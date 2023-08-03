@@ -10,6 +10,7 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #ifdef USE_WM
 #include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager/
 #endif
+#define ARDUINOJSON_DECODE_UNICODE 1
 #include <ArduinoJson.h>  //https://arduinojson.org/
 #include <Ressources/CodePage437_8x14.h>
 #include <WebServer.h>
