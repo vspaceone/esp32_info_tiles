@@ -76,16 +76,23 @@ Icon
 }
 */
 
-void draw_block(String name, uint8_t state) {
-  if (!layout.containsKey(name)) return;
+bool draw_block(String name, uint8_t state) {
+  Serial.print("Drawing block ");
+  Serial.println(name);
+  if (!layout.containsKey(name)) return false;
+  if (!layout[name]["x"].is<uint8_t>() or !layout[name]["x"].is<uint8_t>()) return false;
 
   uint16_t x = layout[name]["x"].as<uint8_t>() * BLOCK_SIZE;
   uint16_t y = layout[name]["y"].as<uint8_t>() * BLOCK_SIZE;
   auto c = st_to_col(state);
+  auto text_c = black;
+  auto bg_c = c;
+
 
   //clear space and draw rect
-  vga.fillRect(x + 1, y + 1, BLOCK_SIZE - 1, BLOCK_SIZE - 1, black);
-  vga.rect(x, y, BLOCK_SIZE, BLOCK_SIZE, c);
+  vga.fillRect(x + 1, y + 1, BLOCK_SIZE - 1, BLOCK_SIZE - 1, bg_c);
+  vga.rect(x, y, BLOCK_SIZE, BLOCK_SIZE, text_c);
+  //vga.rect(x+1, y+1, BLOCK_SIZE-2, BLOCK_SIZE-2, text_c);
 
   //Draw icon
   if (layout[name].containsKey("icon")) {
@@ -95,15 +102,18 @@ void draw_block(String name, uint8_t state) {
   }
 
   //Draw description
-  vga.setTextColor(c);
+  vga.setTextColor(text_c);
   for (uint8_t l = 0; l < 3; l++) {
-    vga.setCursor(x, y + 80 + (l * 16));
     const char* line = layout[name]["desc"][l];
+    uint16_t line_x = x+2 + BLOCK_SIZE/2 - strlen(line)*4; //TODO, center text
+    vga.setCursor(line_x, y + 80 + (l * 16));
     vga.print(line);
   }
   vga.setTextColor(white);
 
   vga.show();
+  Serial.println("done");
+  return true;
 }
 
 uint8_t ha_to_st(String jval) {
@@ -118,14 +128,22 @@ uint8_t ha_to_st(String jval) {
   "binary_sensor.window_2": off }
 */
 void handle_state_update() {
+  Serial.println(F("Incoming State Update"));
   if (srv.hasArg("plain")) {
     String json = srv.arg("plain");
     DynamicJsonDocument doc(4096);
-    auto err = deserializeJson(layout, json);
+    auto err = deserializeJson(doc, json);
     if (err == DeserializationError::Ok) {
+      Serial.println(F("DeSer OK"));
+      DynamicJsonDocument resp(1024);
       JsonObject root = doc.as<JsonObject>();
-      for (JsonPair kv : root) draw_block(kv.key().c_str(), ha_to_st(kv.value()));  //draw all received blocks
-      srv.send(200, "application/json", "{\"success\":\"states set\"}");
+      for (JsonPair kv : root)  //draw all received blocks
+        resp["success"][kv.key().c_str()] =
+          draw_block(kv.key().c_str(), ha_to_st(kv.value()));
+      uint16_t len = measureJson(resp) + 1;
+      char resp_buf[len];
+      serializeJson(resp, resp_buf, len);
+      srv.send(200, "application/json", resp_buf);
     } else {
       String err_txt = "{\"error\":\"";
       err_txt += err.f_str();
@@ -171,7 +189,7 @@ void setup() {
 
   //WiFi
   Serial.println("WiFi... ");
-  vga.print("WiFi... ");
+  vga.print("WiFi...");
   vga.show();
 #ifdef USE_WM
   WiFiManager wm;
@@ -190,9 +208,9 @@ void setup() {
     delay(1000);
   }
 #endif
-  vga.println("OK");
+  vga.println(" OK");
   vga.print("IP is ");
-  vga.println(WiFi.localIP());
+  vga.println(WiFi.localIP().toString().c_str());  //super hacky
   vga.show();
 
   //OTA
@@ -247,7 +265,7 @@ void setup() {
     serializeJson(layout, buf, size);
     srv.send(200, "application/json", buf);
   });
-  srv.on("/layout", HTTP_POST, handle_state_update);
+  srv.on("/states", HTTP_POST, handle_state_update);
   srv.on("/power", HTTP_POST, []() {
     uint8_t val = ha_to_st(srv.arg("plain"));
     if (val != 0) srv.send(400, "text/plain", "bad format");
