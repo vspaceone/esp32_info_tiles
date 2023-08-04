@@ -21,6 +21,8 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #include <DDCVCP.h>  //https://github.com/tttttx2/ddcvcp
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
+#include <WiFiUdp.h>
+#include <NTPClient.h>  //https://github.com/arduino-libraries/NTPClient
 
 #include "config.h"
 #include "sprites.h"
@@ -28,15 +30,17 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 VGA3Bit vga;
 WebServer srv;
 DDCVCP ddc;
+WiFiUDP ntpUDP;
+NTPClient ntp(ntpUDP);
 
 const char* conf_ssid = "space_info config AP";
 const char* conf_pass = "PLEASE_change_me";
 
 #include "stuff.h"
 
-auto color_ok = vga.RGB(0, 255, 255);
+auto color_ok = vga.RGB(0, 255, 0);
 auto color_bad = vga.RGB(255, 0, 255);
-auto color_unknown = vga.RGB(255, 255, 0);
+auto color_unknown = vga.RGB(255, 255, 255);
 auto white = vga.RGB(255, 255, 255);
 auto black = vga.RGB(0, 0, 0);
 
@@ -60,6 +64,23 @@ vga_color_t st_to_col(uint8_t s) {
     case 1: return color_bad; break;
     case 2: return color_ok; break;
   }
+}
+
+char info_text[32] = "";
+
+void update_status_bar() {
+  String status_str = ntp.getFormattedTime();
+  status_str += " UTC ";
+  status_str += WiFi.RSSI();
+  status_str += "dBm ";
+  uint16_t str_px_len = status_str.length() * 8;
+  vga.setTextColor(white);
+  vga.setCursor(0, 258);
+  vga.fillRect(0, 257, str_px_len, 15, black);
+  vga.print(status_str.c_str() );
+  vga.fillRect(str_px_len + 1, 257, 384 - str_px_len, 15, black);
+  vga.setCursor(str_px_len + 1, 258);
+  vga.print(info_text);
 }
 
 
@@ -98,6 +119,7 @@ bool draw_block(String name, uint8_t state) {
   //Draw icon
   if (layout[name].containsKey("icon")) {
     uint8_t id = name_to_sprite[layout[name]["icon"]];
+    if (state == 2) if (layout[name].containsKey("icon_on")) id = name_to_sprite[layout[name]["icon"]];
     //expecting 64x64 icons
     if (id < 255) sprites.drawMix(vga, id, x + 32, y + 2);
   }
@@ -106,13 +128,12 @@ bool draw_block(String name, uint8_t state) {
   vga.setTextColor(text_c);
   for (uint8_t l = 0; l < 3; l++) {
     const char* line = layout[name]["desc"][l];
-    uint16_t line_x = x+2 + BLOCK_SIZE/2 - strlen(line)*4; //TODO, center text
+    uint16_t line_x = x + 2 + BLOCK_SIZE / 2 - strlen(line) * 4;  //TODO, center text
     vga.setCursor(line_x, y + 80 + (l * 16));
     vga.print(line);
   }
   vga.setTextColor(white);
 
-  vga.show();
   Serial.println("done");
   return true;
 }
@@ -182,7 +203,7 @@ void setup() {
 
   //VGA
   Serial.println("VGA...");
-  Mode monitor_res = vga.MODE400x300.custom(384, 256);
+  Mode monitor_res = vga.MODE400x300.custom(384, 272);
   //vga.setFrameBufferCount(2);
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
   vga.setFont(CodePage437_8x14);
@@ -191,7 +212,6 @@ void setup() {
   //WiFi
   Serial.println("WiFi... ");
   vga.print("WiFi...");
-  vga.show();
 #ifdef USE_WM
   WiFiManager wm;
   wm.setConfigPortalTimeout(180);
@@ -212,32 +232,40 @@ void setup() {
   vga.println(" OK");
   vga.print("IP is ");
   vga.println(WiFi.localIP().toString().c_str());  //super hacky
-  vga.show();
+
+  //OTA
+  Serial.println("NTP... ");
+  vga.print("NTP... ");
+  ntp.begin();
+  if (ntp.forceUpdate()) {
+    Serial.println("OK");
+    vga.println("OK");
+    vga.show();
+  } else {
+    Serial.println("ERROR");
+    vga.println("ERROR");
+    vga.show();
+  }
 
   //OTA
   Serial.println("OTA... ");
   vga.print("OTA... ");
-  vga.show();
   init_vga_ota();
   ArduinoOTA.setHostname("space_info");
   ArduinoOTA.begin();
   vga.println("OK");
-  vga.show();
 
   //LittleFS
   Serial.println("LittleFS... ");
   vga.print("LittleFS... ");
-  vga.show();
   if (!LittleFS.begin(true)) {
     Serial.println("ERROR");
     vga.println("ERROR");
   } else vga.println("OK");
-  vga.show();
 
   //Read config
   Serial.println("Config... ");
   vga.print("Config... ");
-  vga.show();
   File lf = LittleFS.open(layout_path, FILE_READ);
   auto err = deserializeJson(layout, lf);
   lf.close();
@@ -245,13 +273,11 @@ void setup() {
     Serial.println("ERROR");
     vga.println("ERROR");
   } else vga.println("OK");
-  vga.show();
 
 
   //REST Server
   Serial.println("REST... ");
   vga.print("REST... ");
-  vga.show();
   srv.on("/", []() {
     String resp = "API Documentation at: [TODO]\nFree Heap: ";
     resp += ESP.getFreeHeap();
@@ -269,7 +295,7 @@ void setup() {
   srv.on("/states", HTTP_POST, handle_state_update);
   srv.on("/power", HTTP_POST, []() {
     uint8_t val = ha_to_st(srv.arg("plain"));
-    if (val != 0) srv.send(400, "text/plain", "bad format");
+    if (val == 0) srv.send(400, "text/plain", "bad format");
     else {
       ddc.setPower(val - 1);
       srv.send(200, "text/plain", "ok");
@@ -282,12 +308,10 @@ void setup() {
   });
   srv.begin();
   vga.println("OK");
-  vga.show();
 
   // DDC/CI
   Serial.print("DDC... ");
   vga.print("DDC... ");
-  vga.show();
   Wire.begin(sdaPin, sclPin);
   if (ddc.begin()) {
     Serial.println("OK");
@@ -300,11 +324,16 @@ void setup() {
   }
 
   vga.println("Waiting for data... ");
-  vga.show();
 }
 
 void loop() {
   srv.handleClient();
+  ntp.update();
+  static uint64_t last_status_update = 0;
+  if (millis() - last_status_update > 500) {
+    last_status_update = millis();
+    update_status_bar();
+  }
   ArduinoOTA.handle();
   delay(5);
 }
