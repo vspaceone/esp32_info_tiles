@@ -10,7 +10,6 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #ifdef USE_WM
 #include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager/
 #endif
-#define ARDUINOJSON_DECODE_UNICODE 1
 #include <ArduinoJson.h>  //https://arduinojson.org/
 #include <Ressources/CodePage437_8x14.h>
 #include <WebServer.h>
@@ -45,8 +44,6 @@ auto black = vga.RGB(0, 0, 0);
 uint16_t res_x = 384;
 uint16_t res_y = 272;
 
-#include "stuff.h"
-
 const int redPin = 12;
 const int greenPin = 13;
 const int bluePin = 15;
@@ -60,150 +57,12 @@ String layout_path = "/layout.json";
 
 DynamicJsonDocument layout(8192);
 
-typedef typeof vga.RGB(0, 0, 0) vga_color_t;
-vga_color_t st_to_col(uint8_t s) {
-  switch (s) {
-    default: return color_unknown; break;
-    case 1: return color_bad; break;
-    case 2: return color_ok; break;
-  }
-}
-
 char info_text[32] = "";
 uint16_t info_text_x = 0;
 
-void draw_status_bar_itext() {
-  vga.fillRect(info_text_x, res_y - 15, res_x - info_text_x, 15, black);
-  vga.setCursor(info_text_x, res_y - 14);
-  vga.print(info_text);
-}
-
-void update_status_bar() {
-  String status_str = ntp.getFormattedTime();
-  status_str += " UTC ";
-  status_str += WiFi.RSSI();
-  status_str += "dBm ";
-  uint16_t str_px_len = status_str.length() * 8;
-  vga.setTextColor(white);
-  vga.setCursor(0, res_y - 14);
-  vga.fillRect(0, res_y - 15, str_px_len, 15, black);
-  vga.print(status_str.c_str());
-  if (info_text_x != str_px_len) {  //only redraw when needed
-    info_text_x = str_px_len;
-    draw_status_bar_itext();
-  }
-}
-
-
-/*
-XY Kachel-Koordinaten,
-Beschreibung 15x3 Zeichen,
-Icon
-
-{
-  "test_tile":{
-    "x":2, "y":2,
-    "desc": ["Test","Kachel",""],
-    "icon": "lightbulb_on",
-    "icon_ok": "lightbulb"
-  }
-}
-*/
-
-bool draw_tile(String name, uint8_t state) {
-  Serial.print("Drawing tile ");
-  Serial.println(name);
-  if (!layout.containsKey(name)) return false;
-  if (!layout[name]["x"].is<uint8_t>() or !layout[name]["x"].is<uint8_t>()) return false;
-
-  uint16_t x = layout[name]["x"].as<uint8_t>() * TILE_SIZE;
-  uint16_t y = layout[name]["y"].as<uint8_t>() * TILE_SIZE;
-  auto c = st_to_col(state);
-  auto text_c = black;
-  auto bg_c = c;
-
-  //clear space and draw rect
-  vga.fillRect(x + 1, y + 1, TILE_SIZE - 1, TILE_SIZE - 1, bg_c);
-  vga.rect(x, y, TILE_SIZE, TILE_SIZE, text_c);
-  //vga.rect(x+1, y+1, TILE_SIZE-2, TILE_SIZE-2, text_c);
-
-  //Draw icon
-  if (layout[name].containsKey("icon")) {
-    uint8_t id = name_to_sprite[layout[name]["icon"]];
-    if (state == 2)
-      if (layout[name].containsKey("icon_ok")) id = name_to_sprite[layout[name]["icon_ok"]];
-    //expecting 64x64 icons
-    if (id < 255) sprites.drawMix(vga, id, x + 32, y + 2);
-  }
-
-  //Draw description
-  vga.setTextColor(text_c);
-  for (uint8_t l = 0; l < 3; l++) {
-    const char* line = layout[name]["desc"][l];
-    uint16_t line_x = x + 2 + TILE_SIZE / 2 - strlen(line) * 4;  //TODO, center text
-    vga.setCursor(line_x, y + 80 + (l * 16));
-    vga.print(line);
-  }
-  vga.setTextColor(white);
-
-  Serial.println("done");
-  return true;
-}
-
-uint8_t ha_to_st(String jval) {
-  jval.toLowerCase();
-  if (jval == "on") return 2;
-  else if (jval == "off") return 1;
-  else return 0;
-}
-
-/*
-{ "binary_sensor.window_1: "on",
-  "binary_sensor.window_2": off }
-*/
-void handle_state_update() {
-  Serial.println(F("Incoming State Update"));
-  if (srv.hasArg("plain")) {
-    String json = srv.arg("plain");
-    DynamicJsonDocument doc(4096);
-    auto err = deserializeJson(doc, json);
-    if (err == DeserializationError::Ok) {
-      Serial.println(F("DeSer OK"));
-      DynamicJsonDocument resp(1024);
-      JsonObject root = doc.as<JsonObject>();
-      for (JsonPair kv : root)  //draw all received tiles
-        resp["success"][kv.key().c_str()] =
-          draw_tile(kv.key().c_str(), ha_to_st(kv.value()));
-      uint16_t len = measureJson(resp) + 1;
-      char resp_buf[len];
-      serializeJson(resp, resp_buf, len);
-      srv.send(200, "application/json", resp_buf);
-    } else {
-      String err_txt = "{\"error\":\"";
-      err_txt += err.f_str();
-      err_txt += "\"}";
-      srv.send(400, "application/json", err_txt);
-    }
-  } else srv.send(400, "application/json", "{\"error\":\"no data\"}");
-}
-
-void handle_layout() {
-  if (srv.hasArg("plain")) {
-    String json = srv.arg("plain");
-    auto err = deserializeJson(layout, json);
-    if (err == DeserializationError::Ok) {
-      File lf = LittleFS.open(layout_path, FILE_WRITE);
-      lf.print(json);
-      lf.close();
-      srv.send(200, "application/json", "{\"success\":\"new layout set\"}");
-    } else {
-      String err_txt = "{\"error\":\"";
-      err_txt += err.f_str();
-      err_txt += "\"}";
-      srv.send(400, "application/json", err_txt);
-    }
-  } else srv.send(400, "application/json", "{\"error\":\"no data\"}");
-}
+#include "stuff.h"
+#include "graphics.h"
+#include "rest.h"
 
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
@@ -296,42 +155,7 @@ void setup() {
   //REST Server
   Serial.println("REST... ");
   vga.print("REST... ");
-  srv.on("/", []() {
-    String resp = "API Documentation at: [TODO]\nFree Heap: ";
-    resp += ESP.getFreeHeap();
-    resp += "\nRSSI: ";
-    resp += WiFi.RSSI();
-    srv.send(200, "text/plain", resp);
-  });
-  srv.on("/layout", HTTP_POST, handle_layout);
-  srv.on("/layout", HTTP_GET, []() {
-    uint32_t size = measureJson(layout) + 1;
-    char buf[size];
-    serializeJson(layout, buf, size);
-    srv.send(200, "application/json", buf);
-  });
-  srv.on("/states", HTTP_POST, handle_state_update);
-  srv.on("/power", HTTP_POST, []() {
-    uint8_t val = ha_to_st(srv.arg("plain"));
-    if (val == 0) srv.send(400, "text/plain", "bad format");
-    else {
-      ddc.setPower(val - 1);
-      srv.send(200, "text/plain", "ok");
-    }
-  });
-  srv.on("/brightness", HTTP_POST, []() {
-    uint8_t brght = srv.arg("plain").toInt();
-    ddc.setBrightness(brght);
-    srv.send(200, "text/plain", "ok");
-  });
-  srv.on("/text", HTTP_POST, []() {
-    String text = srv.arg("plain");
-    if (text.length() < 32) {
-      strcpy(info_text, text.c_str());
-      draw_status_bar_itext();
-      srv.send(200, "text/plain", "ok");
-    } else srv.send(400, "text/plain", "too long");
-  });
+  setup_srv();
   srv.begin();
   vga.println("OK");
 
