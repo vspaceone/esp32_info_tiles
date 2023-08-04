@@ -23,8 +23,8 @@ and optionally an `icon` key for a string corresponding to the name of an icon.
 ### Setting states
 States are set via JSON sent to `/layout` as HTTP POST requests. For example like this:
 ```json
-{"solder":"unknown","power":"off","dishwasher":"on",
-"fox":"unknown","windows":"on","door":"off"}
+{"solder":"unknown","power":"on","dishwasher":"off",
+"fox":"unknown","windows":"off","door":"on"}
 ```
 For each tile that shall change state, a key-value pair has to be sent, the key being the name assigned in the layout,
 and the value being a string (either `on` for OK, `off` for bad, or anything else for unknown). 

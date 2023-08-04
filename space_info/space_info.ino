@@ -77,9 +77,9 @@ void update_status_bar() {
   vga.setTextColor(white);
   vga.setCursor(0, 258);
   vga.fillRect(0, 257, str_px_len, 15, black);
-  vga.print(status_str.c_str() );
-  vga.fillRect(str_px_len + 1, 257, 384 - str_px_len, 15, black);
-  vga.setCursor(str_px_len + 1, 258);
+  vga.print(status_str.c_str());
+  vga.fillRect(str_px_len, 257, 384 - str_px_len, 15, black);
+  vga.setCursor(str_px_len, 258);
   vga.print(info_text);
 }
 
@@ -118,7 +118,8 @@ bool draw_block(String name, uint8_t state) {
   //Draw icon
   if (layout[name].containsKey("icon")) {
     uint8_t id = name_to_sprite[layout[name]["icon"]];
-    if (state == 2) if (layout[name].containsKey("icon_ok")) id = name_to_sprite[layout[name]["icon_ok"]];
+    if (state == 2)
+      if (layout[name].containsKey("icon_ok")) id = name_to_sprite[layout[name]["icon_ok"]];
     //expecting 64x64 icons
     if (id < 255) sprites.drawMix(vga, id, x + 32, y + 2);
   }
@@ -194,8 +195,6 @@ void handle_layout() {
 
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
-  delay(10000);
-
   Serial.begin(115200);
   Serial.print("\nvspace.one Info-Monitor, compiled ");
   Serial.println(__DATE__);
@@ -206,7 +205,15 @@ void setup() {
   //vga.setFrameBufferCount(2);
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
   vga.setFont(CodePage437_8x14);
-  vga.clear(0);
+
+  vga.fillRect(0, 0, 384, 45, vga.RGB(255, 0, 0));
+  vga.fillRect(0, 42 * 1, 384, 42, vga.RGB(255, 255, 0));
+  vga.fillRect(0, 42 * 2, 384, 42, vga.RGB(0, 255, 0));
+  vga.fillRect(0, 42 * 3, 384, 42, vga.RGB(0, 255, 255));
+  vga.fillRect(0, 42 * 4, 384, 42, vga.RGB(0, 0, 255));
+  vga.fillRect(0, 42 * 5, 384, 42, vga.RGB(255, 0, 255));
+
+  delay(2000);
 
   //WiFi
   Serial.println("WiFi... ");
