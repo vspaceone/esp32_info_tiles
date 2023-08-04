@@ -36,13 +36,16 @@ NTPClient ntp(ntpUDP);
 const char* conf_ssid = "space_info config AP";
 const char* conf_pass = "PLEASE_change_me";
 
-#include "stuff.h"
-
 auto color_ok = vga.RGB(0, 255, 0);
 auto color_bad = vga.RGB(255, 0, 255);
 auto color_unknown = vga.RGB(255, 255, 255);
 auto white = vga.RGB(255, 255, 255);
 auto black = vga.RGB(0, 0, 0);
+
+uint16_t res_x = 384;
+uint16_t res_y = 272;
+
+#include "stuff.h"
 
 const int redPin = 12;
 const int greenPin = 13;
@@ -70,8 +73,8 @@ char info_text[32] = "";
 uint16_t info_text_x = 0;
 
 void draw_status_bar_itext() {
-  vga.fillRect(info_text_x, 257, 384 - info_text_x, 15, black);
-  vga.setCursor(info_text_x, 258);
+  vga.fillRect(info_text_x, res_y - 15, res_x - info_text_x, 15, black);
+  vga.setCursor(info_text_x, res_y - 14);
   vga.print(info_text);
 }
 
@@ -82,8 +85,8 @@ void update_status_bar() {
   status_str += "dBm ";
   uint16_t str_px_len = status_str.length() * 8;
   vga.setTextColor(white);
-  vga.setCursor(0, 258);
-  vga.fillRect(0, 257, str_px_len, 15, black);
+  vga.setCursor(0, res_y - 14);
+  vga.fillRect(0, res_y - 15, str_px_len, 15, black);
   vga.print(status_str.c_str());
   if (info_text_x != str_px_len) {  //only redraw when needed
     info_text_x = str_px_len;
@@ -209,17 +212,18 @@ void setup() {
 
   //VGA
   Serial.println("VGA...");
-  Mode monitor_res = vga.MODE400x300.custom(384, 272);
+  Mode monitor_res = vga.MODE400x300.custom(res_x, res_y);
   //vga.setFrameBufferCount(2);
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
   vga.setFont(CodePage437_8x14);
 
-  vga.fillRect(0, 0, 384, 45, vga.RGB(255, 0, 0));
-  vga.fillRect(0, 42 * 1, 384, 42, vga.RGB(255, 255, 0));
-  vga.fillRect(0, 42 * 2, 384, 42, vga.RGB(0, 255, 0));
-  vga.fillRect(0, 42 * 3, 384, 42, vga.RGB(0, 255, 255));
-  vga.fillRect(0, 42 * 4, 384, 42, vga.RGB(0, 0, 255));
-  vga.fillRect(0, 42 * 5, 384, 42, vga.RGB(255, 0, 255));
+  uint8_t y_steps = (res_y - 16) / 6;
+  vga.fillRect(0, 0, res_x, 45, vga.RGB(255, 0, 0));
+  vga.fillRect(0, y_steps * 1, res_x, y_steps, vga.RGB(255, 255, 0));
+  vga.fillRect(0, y_steps * 2, res_x, y_steps, vga.RGB(0, 255, 0));
+  vga.fillRect(0, y_steps * 3, res_x, y_steps, vga.RGB(0, 255, 255));
+  vga.fillRect(0, y_steps * 4, res_x, y_steps, vga.RGB(0, 0, 255));
+  vga.fillRect(0, y_steps * 5, res_x, y_steps, vga.RGB(255, 0, 255));
 
   delay(2000);
 
@@ -247,7 +251,7 @@ void setup() {
   vga.print("IP is ");
   vga.println(WiFi.localIP().toString().c_str());  //super hacky
 
-  //OTA
+  //NTP
   Serial.println("NTP... ");
   vga.print("NTP... ");
   ntp.begin();
@@ -264,6 +268,7 @@ void setup() {
   vga.print("OTA... ");
   init_vga_ota();
   ArduinoOTA.setHostname("space_info");
+  ArduinoOTA.setPassword(ota_pass);
   ArduinoOTA.begin();
   vga.println("OK");
 
@@ -335,9 +340,9 @@ void setup() {
   Wire.begin(sdaPin, sclPin);
   if (ddc.begin()) {
     ddc.setPower(true);
-    ddc.setSource(0x01);  //Set monitor to VGA-1 input
-    ddc.setVCP(0x86,0x02); //Scaling: Max image, no aspect ration distortion
-    ddc.setVCP(0xDC,0x09); //Display: Standard/Default mode with low power consumption
+    ddc.setSource(0x01);     //Set monitor to VGA-1 input
+    ddc.setVCP(0x86, 0x02);  //Scaling: Max image, no aspect ration distortion
+    ddc.setVCP(0xDC, 0x09);  //Display: Standard/Default mode with low power consumption
     Serial.println("OK");
     Serial.print("VCP Version ");
     Serial.println(ddc.getVCP(0xDF));
