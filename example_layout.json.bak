@@ -1,0 +1,8 @@
+{
+	"solder":{"x":0,"y":0,"desc":["Alle","Lîtstationen","abgek¸hlt?"], "icon":"soldering_iron"},
+	"power":{"x":1,"y":0,"desc":["Strom","ist","aus?"], "icon":"building_power"},
+	"dishwasher":{"x":2,"y":0,"desc":["SpÅlmaschine","ist","ausgerÑumt?"], "icon":"dishwasher_alert", "icon_ok":"dishwasher"},
+	"shutters":{"x":0,"y":1,"desc":["RollÑden","alle","geschlossen?"], "icon":"shutter_open", "icon_ok":"shutter_closed"},
+	"windows":{"x":1,"y":1,"desc":["Sind","alle Fenster","zu?"], "icon":"window_open", "icon_ok":"window"},
+	"door":{"x":2,"y":1,"desc":["Hubwagen","TÅr","geschlossen?"], "icon":"door_open", "icon_ok":"door_closed"}
+}
