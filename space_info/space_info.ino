@@ -24,16 +24,12 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #include <NTPClient.h>  //https://github.com/arduino-libraries/NTPClient
 
 #include "config.h"
-#include "sprites.h"
 
 VGA3Bit vga;
 WebServer srv;
 DDCVCP ddc;
 WiFiUDP ntpUDP;
 NTPClient ntp(ntpUDP);
-
-const char* conf_ssid = "space_info config AP";
-const char* conf_pass = "PLEASE_change_me";
 
 auto color_ok = vga.RGB(0, 255, 0);
 auto color_bad = vga.RGB(255, 0, 255);
@@ -56,11 +52,11 @@ const int sclPin = 0;
 String layout_path = "/layout.json";
 
 DynamicJsonDocument layout(8192);
-
 char info_text[32] = "";
 uint16_t info_text_x = 0;
 
 #include "stuff.h"
+#include "sprites.h"
 #include "graphics.h"
 #include "rest.h"
 

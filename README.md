@@ -34,9 +34,9 @@ rest_command:
   set_info_tile_states:
     url: "http://your.ip/states"
     payload: >
-    {% macro entity_to_kv(entity_id) %}'{{ entity_id }}': '{{ states(entity_id) }}'{% endmacro %}
-    {
-      {{ entity_to_kv('binary_sensor.window_1') }},
-      {{ entity_to_kv('binary_sensor.door_3') }}
-    }
+      {% macro entity_to_kv(entity_id) %}'{{ entity_id }}': '{{ states(entity_id) }}'{% endmacro %}
+      {
+        {{ entity_to_kv('binary_sensor.window_1') }},
+        {{ entity_to_kv('binary_sensor.door_3') }}
+      }
 ```
