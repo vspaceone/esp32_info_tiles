@@ -67,6 +67,13 @@ vga_color_t st_to_col(uint8_t s) {
 }
 
 char info_text[32] = "";
+uint16_t info_text_x = 0;
+
+void draw_status_bar_itext() {
+  vga.fillRect(info_text_x, 257, 384 - info_text_x, 15, black);
+  vga.setCursor(info_text_x, 258);
+  vga.print(info_text);
+}
 
 void update_status_bar() {
   String status_str = ntp.getFormattedTime();
@@ -78,9 +85,10 @@ void update_status_bar() {
   vga.setCursor(0, 258);
   vga.fillRect(0, 257, str_px_len, 15, black);
   vga.print(status_str.c_str());
-  vga.fillRect(str_px_len, 257, 384 - str_px_len, 15, black);
-  vga.setCursor(str_px_len, 258);
-  vga.print(info_text);
+  if (info_text_x != str_px_len) {  //only redraw when needed
+    info_text_x = str_px_len;
+    draw_status_bar_itext();
+  }
 }
 
 
@@ -246,11 +254,9 @@ void setup() {
   if (ntp.forceUpdate()) {
     Serial.println("OK");
     vga.println("OK");
-    vga.show();
   } else {
     Serial.println("ERROR");
     vga.println("ERROR");
-    vga.show();
   }
 
   //OTA
@@ -312,6 +318,14 @@ void setup() {
     ddc.setBrightness(brght);
     srv.send(200, "text/plain", "ok");
   });
+  srv.on("/text", HTTP_POST, []() {
+    String text = srv.arg("plain");
+    if (text.length() < 32) {
+      strcpy(info_text, text.c_str());
+      draw_status_bar_itext();
+      srv.send(200, "text/plain", "ok");
+    } else srv.send(400, "text/plain", "too long");
+  });
   srv.begin();
   vga.println("OK");
 
@@ -320,13 +334,17 @@ void setup() {
   vga.print("DDC... ");
   Wire.begin(sdaPin, sclPin);
   if (ddc.begin()) {
+    ddc.setPower(true);
+    ddc.setSource(0x01);  //Set monitor to VGA-1 input
+    ddc.setVCP(0x86,0x02); //Scaling: Max image, no aspect ration distortion
+    ddc.setVCP(0xDC,0x09); //Display Mode: Standard/Default mode with low power consumption
     Serial.println("OK");
+    Serial.print("VCP Version ");
+    Serial.println(ddc.getVCP(0xDF));
     vga.println("OK");
-    vga.show();
   } else {
     Serial.println("ERROR");
     vga.println("ERROR");
-    vga.show();
   }
 
   vga.println("Waiting for data... ");
