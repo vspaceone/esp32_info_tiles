@@ -7,12 +7,12 @@ desc TODO
 Layouts are set via JSON sent to `/layout` as HTTP POST requests. For example like this:
 ```json
 {
-	"test00":{"x":0,"y":0,"desc":["The quick brown","fox jumps over","the lazy dog."]},
-	"test10":{"x":1,"y":0,"desc":["Strom","ist","aus."], "icon":"building_power"},
-	"test20":{"x":2,"y":0,"desc":["Sp\u0081lmaschine","ist","ausger\u0084umt."], "icon":"dishwasher_alert", "icon_on":"dishwasher"},
-	"test01":{"x":0,"y":1,"desc":["The quick brown","fox jumps over","the lazy dog."]},
-	"test11":{"x":1,"y":1,"desc":["Die Fenster","sind","alle zu."], "icon":"window"},
-	"test21":{"x":2,"y":1,"desc":["Hubwagen","T\u0081r","geschlossen"], "icon":"door"}
+	"solder":{"x":0,"y":0,"desc":["Alle","Lotstationen","abgekühlt."], "icon":"soldering_iron"},
+	"power":{"x":1,"y":0,"desc":["Strom","ist","aus."], "icon":"building_power"},
+	"dishwasher":{"x":2,"y":0,"desc":["Sp\u0081lmaschine","ist","ausger\u0084umt."], "icon":"dishwasher_alert", "icon_ok":"dishwasher"},
+	"fox":{"x":0,"y":1,"desc":["The quick brown","fox jumps over","the lazy dog."]},
+	"windows":{"x":1,"y":1,"desc":["Die Fenster","sind","alle zu."], "icon":"window"},
+	"door":{"x":2,"y":1,"desc":["Hubwagen","T\u0081r","geschlossen"], "icon":"door"}
 }
 ```
 A layout consists of a single object with each key being the name of your choice for a status-tile.
@@ -23,11 +23,11 @@ and optionally an `icon` key for a string corresponding to the name of an icon.
 ### Setting states
 States are set via JSON sent to `/layout` as HTTP POST requests. For example like this:
 ```json
-{"test00":"unknown","test10":"off","test20":"on",
-"test01":"unknown","test11":"on","test21":"off"}
+{"solder":"unknown","power":"off","dishwasher":"on",
+"fox":"unknown","windows":"on","door":"off"}
 ```
 For each tile that shall change state, a key-value pair has to be sent, the key being the name assigned in the layout,
-and the value being a string (either `on`, `off`, or anything else for unknown). 
+and the value being a string (either `on` for OK, `off` for bad, or anything else for unknown). 
 
 ### Other
 * `brighness` sets the displays brightness. (Send a number from 0 to 100 via HTTP POST.)

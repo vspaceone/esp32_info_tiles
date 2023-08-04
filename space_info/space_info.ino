@@ -118,7 +118,7 @@ bool draw_block(String name, uint8_t state) {
   //Draw icon
   if (layout[name].containsKey("icon")) {
     uint8_t id = name_to_sprite[layout[name]["icon"]];
-    if (state == 2) if (layout[name].containsKey("icon_on")) id = name_to_sprite[layout[name]["icon_on"]];
+    if (state == 2) if (layout[name].containsKey("icon_ok")) id = name_to_sprite[layout[name]["icon_ok"]];
     //expecting 64x64 icons
     if (id < 255) sprites.drawMix(vga, id, x + 32, y + 2);
   }
