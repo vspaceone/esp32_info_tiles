@@ -1,11 +1,18 @@
 std::map<String, uint8_t> name_to_sprite{
-  { "none", 255},
-  { "soldering_iron", 5},
-  { "building_power", 4},
-  { "window", 3},
-  { "door", 2},
-  { "dishwasher_alert", 1},
-  { "dishwasher", 0}
+  { "none", 255 },
+  { "soldering_iron", 12 },
+  { "building_power", 11 },
+  { "shutter_open", 10 },
+  { "shutter", 9 },
+  { "lightbulb_on", 8 },
+  { "lightbulb", 7 },
+  { "window_open", 6 },
+  { "window", 5 },
+  { "door_open", 4 },
+  { "door_closed", 3 },
+  { "door", 2 },
+  { "dishwasher_alert", 1 },
+  { "dishwasher", 0 }
 };
 
 void init_vga_ota() {

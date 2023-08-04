@@ -337,7 +337,7 @@ void setup() {
     ddc.setPower(true);
     ddc.setSource(0x01);  //Set monitor to VGA-1 input
     ddc.setVCP(0x86,0x02); //Scaling: Max image, no aspect ration distortion
-    ddc.setVCP(0xDC,0x09); //Display Mode: Standard/Default mode with low power consumption
+    ddc.setVCP(0xDC,0x09); //Display: Standard/Default mode with low power consumption
     Serial.println("OK");
     Serial.print("VCP Version ");
     Serial.println(ddc.getVCP(0xDF));
