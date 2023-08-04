@@ -1,8 +1,10 @@
 std::map<String, uint8_t> name_to_sprite{
   { "none", 255},
-  { "building_power", 3},
-  { "window", 2},
-  { "door", 1},
+  { "soldering_iron", 5},
+  { "building_power", 4},
+  { "window", 3},
+  { "door", 2},
+  { "dishwasher_alert", 1},
   { "dishwasher", 0}
 };
 

@@ -110,7 +110,6 @@ bool draw_block(String name, uint8_t state) {
   auto text_c = black;
   auto bg_c = c;
 
-
   //clear space and draw rect
   vga.fillRect(x + 1, y + 1, BLOCK_SIZE - 1, BLOCK_SIZE - 1, bg_c);
   vga.rect(x, y, BLOCK_SIZE, BLOCK_SIZE, text_c);
@@ -119,7 +118,7 @@ bool draw_block(String name, uint8_t state) {
   //Draw icon
   if (layout[name].containsKey("icon")) {
     uint8_t id = name_to_sprite[layout[name]["icon"]];
-    if (state == 2) if (layout[name].containsKey("icon_on")) id = name_to_sprite[layout[name]["icon"]];
+    if (state == 2) if (layout[name].containsKey("icon_on")) id = name_to_sprite[layout[name]["icon_on"]];
     //expecting 64x64 icons
     if (id < 255) sprites.drawMix(vga, id, x + 32, y + 2);
   }

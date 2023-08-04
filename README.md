@@ -9,7 +9,7 @@ Layouts are set via JSON sent to `/layout` as HTTP POST requests. For example li
 {
 	"test00":{"x":0,"y":0,"desc":["The quick brown","fox jumps over","the lazy dog."]},
 	"test10":{"x":1,"y":0,"desc":["Strom","ist","aus."], "icon":"building_power"},
-	"test20":{"x":2,"y":0,"desc":["Sp\u0081lmaschine","ist","ausger\u0084umt."], "icon":"dishwasher"},
+	"test20":{"x":2,"y":0,"desc":["Sp\u0081lmaschine","ist","ausger\u0084umt."], "icon":"dishwasher_alert", "icon_on":"dishwasher"},
 	"test01":{"x":0,"y":1,"desc":["The quick brown","fox jumps over","the lazy dog."]},
 	"test11":{"x":1,"y":1,"desc":["Die Fenster","sind","alle zu."], "icon":"window"},
 	"test21":{"x":2,"y":1,"desc":["Hubwagen","T\u0081r","geschlossen"], "icon":"door"}
