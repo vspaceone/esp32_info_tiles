@@ -1,7 +1,7 @@
 /*
 Compile with minimal SPIFFS Partition Scheme
 
-Layout is grid of blocks. Each block has an icon and text. Status is shown as color and in text form.
+Layout is grid of tiles. Each tile has an icon and text. Status is shown as color and in text form.
 
 Homeassistant sends states via REST. Uses jinja templating of homeassistant to insert states.
 */
@@ -55,7 +55,7 @@ const int vsyncPin = 2;
 const int sdaPin = 16;
 const int sclPin = 0;
 
-#define BLOCK_SIZE 128  //each block is 128x128
+#define TILE_SIZE 128  //each tile is 128x128
 String layout_path = "/layout.json";
 
 DynamicJsonDocument layout(8192);
@@ -96,35 +96,36 @@ void update_status_bar() {
 
 
 /*
-XY Block-Koordinaten,
+XY Kachel-Koordinaten,
 Beschreibung 15x3 Zeichen,
 Icon
 
 {
-  "test_block":{
+  "test_tile":{
     "x":2, "y":2,
-    "desc": ["Test","Block",""],
-    "icon": "ha"
+    "desc": ["Test","Kachel",""],
+    "icon": "lightbulb_on",
+    "icon_ok": "lightbulb"
   }
 }
 */
 
-bool draw_block(String name, uint8_t state) {
-  Serial.print("Drawing block ");
+bool draw_tile(String name, uint8_t state) {
+  Serial.print("Drawing tile ");
   Serial.println(name);
   if (!layout.containsKey(name)) return false;
   if (!layout[name]["x"].is<uint8_t>() or !layout[name]["x"].is<uint8_t>()) return false;
 
-  uint16_t x = layout[name]["x"].as<uint8_t>() * BLOCK_SIZE;
-  uint16_t y = layout[name]["y"].as<uint8_t>() * BLOCK_SIZE;
+  uint16_t x = layout[name]["x"].as<uint8_t>() * TILE_SIZE;
+  uint16_t y = layout[name]["y"].as<uint8_t>() * TILE_SIZE;
   auto c = st_to_col(state);
   auto text_c = black;
   auto bg_c = c;
 
   //clear space and draw rect
-  vga.fillRect(x + 1, y + 1, BLOCK_SIZE - 1, BLOCK_SIZE - 1, bg_c);
-  vga.rect(x, y, BLOCK_SIZE, BLOCK_SIZE, text_c);
-  //vga.rect(x+1, y+1, BLOCK_SIZE-2, BLOCK_SIZE-2, text_c);
+  vga.fillRect(x + 1, y + 1, TILE_SIZE - 1, TILE_SIZE - 1, bg_c);
+  vga.rect(x, y, TILE_SIZE, TILE_SIZE, text_c);
+  //vga.rect(x+1, y+1, TILE_SIZE-2, TILE_SIZE-2, text_c);
 
   //Draw icon
   if (layout[name].containsKey("icon")) {
@@ -139,7 +140,7 @@ bool draw_block(String name, uint8_t state) {
   vga.setTextColor(text_c);
   for (uint8_t l = 0; l < 3; l++) {
     const char* line = layout[name]["desc"][l];
-    uint16_t line_x = x + 2 + BLOCK_SIZE / 2 - strlen(line) * 4;  //TODO, center text
+    uint16_t line_x = x + 2 + TILE_SIZE / 2 - strlen(line) * 4;  //TODO, center text
     vga.setCursor(line_x, y + 80 + (l * 16));
     vga.print(line);
   }
@@ -170,9 +171,9 @@ void handle_state_update() {
       Serial.println(F("DeSer OK"));
       DynamicJsonDocument resp(1024);
       JsonObject root = doc.as<JsonObject>();
-      for (JsonPair kv : root)  //draw all received blocks
+      for (JsonPair kv : root)  //draw all received tiles
         resp["success"][kv.key().c_str()] =
-          draw_block(kv.key().c_str(), ha_to_st(kv.value()));
+          draw_tile(kv.key().c_str(), ha_to_st(kv.value()));
       uint16_t len = measureJson(resp) + 1;
       char resp_buf[len];
       serializeJson(resp, resp_buf, len);
