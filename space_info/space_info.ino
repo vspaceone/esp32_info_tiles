@@ -74,16 +74,17 @@ void setup() {
   vga.setFont(CodePage437_8x14);
 
 
-  uint8_t y_steps = (res_y - 16) / 6;
+  uint8_t y_steps;
 #ifdef TRANS_FLAG
+  y_steps = (res_y - 16) / 5;
   vga.fillRect(0, 0, res_x, 45, vga.RGB(0, 255, 255));
   vga.fillRect(0, y_steps * 1, res_x, y_steps, vga.RGB(255, 0, 225));
   vga.fillRect(0, y_steps * 2, res_x, y_steps, white);
   vga.fillRect(0, y_steps * 3, res_x, y_steps, vga.RGB(255, 0, 255));
   vga.fillRect(0, y_steps * 4, res_x, y_steps, vga.RGB(0, 255, 255));
-  vga.fillRect(0, y_steps * 5, res_x, y_steps, black);
   vga.setTextColor(black);
 #else
+  y_steps = (res_y - 16) / 6;
   vga.fillRect(0, 0, res_x, 45, vga.RGB(255, 0, 0));
   vga.fillRect(0, y_steps * 1, res_x, y_steps, vga.RGB(255, 255, 0));
   vga.fillRect(0, y_steps * 2, res_x, y_steps, vga.RGB(0, 255, 0));
