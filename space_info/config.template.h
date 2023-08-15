@@ -5,4 +5,6 @@ const char* conf_pass = "PLEASE_change_me";
 //const char* wifi_ssid = "your SSID";
 //const char* wifi_pass = "your password";
 
-const char * ota_pass = "CHANGE_ME_please"; 
+const char * ota_pass = "CHANGE_ME_please";
+
+//#define TRANS_FLAG

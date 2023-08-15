@@ -66,7 +66,7 @@ void setup_srv() {
     uint32_t size = measureJson(layout) + 1;
     char buf[size];
     serializeJson(layout, buf, size);
-    srv.send(200, "application/json", buf);
+    srv.send(200, "application/json; charset=ibm437", buf);
   });
   srv.on("/states", HTTP_POST, handle_state_update);
   srv.on("/power", HTTP_POST, []() {
