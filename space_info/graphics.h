@@ -9,8 +9,8 @@ vga_color_t st_to_col(uint8_t s) {
 
 void dith_rect(int16_t x, int16_t y, int16_t w, int16_t h, vga_color_t c1, vga_color_t c2) {
   for (int16_t line = y; line < h + y; line++)
-    for (int16_t col = x; y < w + x; col++)
-      vga.dot(line, col, (line % 1 == col % 1) ? c1 : c2);
+    for (int16_t col = x; col < w + x; col++)
+      vga.dot(col, line, (line /*xor col*/) & 0x01 ? c1 : c2);
 }
 
 void draw_status_bar_itext() {
