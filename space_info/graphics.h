@@ -7,6 +7,12 @@ vga_color_t st_to_col(uint8_t s) {
   }
 }
 
+void dith_rect(int16_t x, int16_t y, int16_t w, int16_t h, vga_color_t c1, vga_color_t c2) {
+  for (int16_t line = y; line < h + y; line++)
+    for (int16_t col = x; y < w + x; col++)
+      vga.dot(line, col, (line % 1 == col % 1) ? c1 : c2);
+}
+
 void draw_status_bar_itext() {
   vga.fillRect(info_text_x, res_y - 15, res_x - info_text_x, 15, black);
   vga.setCursor(info_text_x, res_y - 14);

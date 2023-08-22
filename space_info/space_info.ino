@@ -73,7 +73,6 @@ void setup() {
   vga.init(monitor_res, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
   vga.setFont(CodePage437_8x14);
 
-
   uint8_t y_steps;
 #ifdef TRANS_FLAG
   y_steps = (res_y - 16) / 5;
@@ -83,7 +82,18 @@ void setup() {
   vga.fillRect(0, y_steps * 3, res_x, y_steps, vga.RGB(255, 0, 255));
   vga.fillRect(0, y_steps * 4, res_x, y_steps, vga.RGB(0, 255, 255));
   vga.setTextColor(black);
-#else
+#endif 
+#ifdef LGBTQ_FLAG
+  y_steps = (res_y - 16) / 6;
+  vga.fillRect(0, 0, res_x, 45, vga.RGB(255, 0, 0));
+  dith_rect(0, y_steps * 1, res_x, y_steps, vga.RGB(255, 0, 0), vga.RGB(255, 255, 0));
+  vga.fillRect(0, y_steps * 2, res_x, y_steps, vga.RGB(255, 255, 0));
+  vga.fillRect(0, y_steps * 3, res_x, y_steps, vga.RGB(0, 255, 0));
+  vga.fillRect(0, y_steps * 4, res_x, y_steps, vga.RGB(0, 0, 255));
+  dith_rect(0, y_steps * 5, res_x, y_steps, vga.RGB(255, 0, 255), black);
+  vga.setTextColor(white);
+#endif
+#ifdef COLOR_BARS
   y_steps = (res_y - 16) / 6;
   vga.fillRect(0, 0, res_x, 45, vga.RGB(255, 0, 0));
   vga.fillRect(0, y_steps * 1, res_x, y_steps, vga.RGB(255, 255, 0));
@@ -91,6 +101,7 @@ void setup() {
   vga.fillRect(0, y_steps * 3, res_x, y_steps, vga.RGB(0, 255, 255));
   vga.fillRect(0, y_steps * 4, res_x, y_steps, vga.RGB(0, 0, 255));
   vga.fillRect(0, y_steps * 5, res_x, y_steps, vga.RGB(255, 0, 255));
+  vga.setTextColor(white);
 #endif
 
   delay(2000);
@@ -98,16 +109,21 @@ void setup() {
   //WiFi
   Serial.println("WiFi... ");
   vga.print("WiFi...");
+  WiFi.hostname(hostname);
 #ifdef USE_WM
   WiFiManager wm;
   wm.setConfigPortalTimeout(180);
-  WiFi.hostname("space_info");
   wm.setAPCallback(wm_ap_c);
   if (!wm.autoConnect(conf_ssid, conf_pass)) {
     ESP.restart();
   }
 #else
   WiFi.mode(WIFI_STA);
+
+#ifdef USE_STATIC_IP
+  WiFi.config(static_ip, gateway, subnet, dns1, dns2);
+#endif
+
   WiFi.begin(wifi_ssid, wifi_pass);
   while (!WiFi.isConnected()) {
     Serial.print('.');
@@ -135,7 +151,7 @@ void setup() {
   Serial.println("OTA... ");
   vga.print("OTA... ");
   init_vga_ota();
-  ArduinoOTA.setHostname("space_info");
+  ArduinoOTA.setHostname(hostname);
   ArduinoOTA.setPassword(ota_pass);
   ArduinoOTA.begin();
   vga.println("OK");
