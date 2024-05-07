@@ -23,6 +23,12 @@ std::map<ota_error_t, const char *> ota_err_to_str{
   { OTA_END_ERROR, "End Failed" }
 };
 
+enum state_id_t {
+  STATE_UNKNOWN=0,
+  STATE_BAD=1,
+  STATE_OK=2
+};
+
 void init_vga_ota() {
   ArduinoOTA
     .onStart([]() {

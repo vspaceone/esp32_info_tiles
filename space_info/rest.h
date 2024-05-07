@@ -1,8 +1,8 @@
 uint8_t ha_to_st(String jval) {
   jval.toLowerCase();
-  if (jval == "on") return 2;
-  else if (jval == "off") return 1;
-  else return 0;
+  if (jval == "on") return STATE_OK;
+  else if (jval == "off") return STATE_BAD;
+  else return STATE_UNKNOWN;
 }
 
 /*
@@ -71,9 +71,9 @@ void setup_srv() {
   srv.on("/states", HTTP_POST, handle_state_update);
   srv.on("/power", HTTP_POST, []() {
     uint8_t val = ha_to_st(srv.arg("plain"));
-    if (val == 0) srv.send(400, "text/plain", "bad format");
+    if (val == STATE_UNKNOWN) srv.send(400, "text/plain", "bad format");
     else {
-      ddc.setPower(val - 1);
+      ddc.setPower(val == STATE_OK);
       srv.send(200, "text/plain", "ok");
     }
   });

@@ -2,8 +2,8 @@ typedef typeof vga.RGB(0, 0, 0) vga_color_t;
 vga_color_t st_to_col(uint8_t s) {
   switch (s) {
     default: return color_unknown; break;
-    case 1: return color_bad; break;
-    case 2: return color_ok; break;
+    case STATE_BAD: return color_bad; break;
+    case STATE_OK: return color_ok; break;
   }
 }
 
@@ -71,7 +71,7 @@ bool draw_tile(String name, uint8_t state) {
   //Draw icon
   if (layout[name].containsKey("icon")) {
     uint8_t id = name_to_sprite[layout[name]["icon"]];
-    if (state == 2)
+    if (state == STATE_OK)
       if (layout[name].containsKey("icon_ok")) id = name_to_sprite[layout[name]["icon_ok"]];
     //expecting 64x64 icons
     if (id < 255) sprites.drawMix(vga, id, x + 32, y + 2);
