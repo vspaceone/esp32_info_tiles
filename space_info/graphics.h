@@ -80,7 +80,13 @@ bool draw_tile(String name, uint8_t state) {
   //Draw description
   vga.setTextColor(text_c);
   for (uint8_t l = 0; l < 3; l++) {
-    const char* line = layout[name]["desc"][l];
+    const char* line_unkn = layout[name]["desc"][l];
+    const char* line_bad = layout[name]["desc_bad"][l];
+    const char* line_ok = layout[name]["desc_ok"][l];
+    char* line = const_cast<char*>(line_unkn);
+    if (state == STATE_OK and layout[name].containsKey("desc_ok")) line = const_cast<char*>(line_ok);
+    else if (state == STATE_BAD and layout[name].containsKey("desc_bad")) line = const_cast<char*>(line_bad);
+
     uint16_t line_x = x + 2 + TILE_SIZE / 2 - strlen(line) * 4;  //TODO, center text
     vga.setCursor(line_x, y + 80 + (l * 16));
     vga.print(line);
