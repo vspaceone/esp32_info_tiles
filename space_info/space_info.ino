@@ -40,13 +40,14 @@ auto black = vga.RGB(0, 0, 0);
 uint16_t res_x = 384;
 uint16_t res_y = 272;
 
-const int redPin = 12;
-const int greenPin = 13;
-const int bluePin = 15;
-const int hsyncPin = 14;
-const int vsyncPin = 2;
-const int sdaPin = 16;
-const int sclPin = 0;
+const uint8_t ledPin = 33;
+const uint8_t redPin = 12;
+const uint8_t greenPin = 13;
+const uint8_t bluePin = 15;
+const uint8_t hsyncPin = 14;
+const uint8_t vsyncPin = 2;
+const uint8_t sdaPin = 16;
+const uint8_t sclPin = 0;
 
 #define TILE_SIZE 128  //each tile is 128x128
 String layout_path = "/layout.json";
@@ -62,6 +63,8 @@ uint16_t info_text_x = 0;
 
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
   Serial.begin(115200);
   Serial.print("\nvspace.one Info-Monitor, compiled ");
   Serial.println(__DATE__);
@@ -82,7 +85,7 @@ void setup() {
   vga.fillRect(0, y_steps * 3, res_x, y_steps, vga.RGB(255, 0, 255));
   vga.fillRect(0, y_steps * 4, res_x, y_steps, vga.RGB(0, 255, 255));
   vga.setTextColor(black);
-#endif 
+#endif
 #ifdef LGBTQ_FLAG
   y_steps = (res_y - 16) / 6;
   vga.fillRect(0, 0, res_x, 45, vga.RGB(255, 0, 0));
@@ -202,6 +205,7 @@ void setup() {
   }
 
   vga.println("Waiting for data... ");
+  digitalWrite(ledPin, HIGH);
 }
 
 void loop() {

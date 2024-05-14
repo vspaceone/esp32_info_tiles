@@ -10,6 +10,7 @@ uint8_t ha_to_st(String jval) {
   "binary_sensor.window_2": off }
 */
 void handle_state_update() {
+  digitalWrite(ledPin, LOW);
   Serial.println(F("Incoming State Update"));
   if (srv.hasArg("plain")) {
     String json = srv.arg("plain");
@@ -33,9 +34,11 @@ void handle_state_update() {
       srv.send(400, "application/json", err_txt);
     }
   } else srv.send(400, "application/json", "{\"error\":\"no data\"}");
+  digitalWrite(ledPin, HIGH);
 }
 
 void handle_layout() {
+  digitalWrite(ledPin, LOW);
   if (srv.hasArg("plain")) {
     String json = srv.arg("plain");
     auto err = deserializeJson(layout, json);
@@ -51,43 +54,54 @@ void handle_layout() {
       srv.send(400, "application/json", err_txt);
     }
   } else srv.send(400, "application/json", "{\"error\":\"no data\"}");
+  digitalWrite(ledPin, HIGH);
 }
 
 void setup_srv() {
   srv.on("/", []() {
+    digitalWrite(ledPin, LOW);
     String resp = "API Documentation at: [TODO]\nFree Heap: ";
     resp += ESP.getFreeHeap();
     resp += "\nRSSI: ";
     resp += WiFi.RSSI();
     srv.send(200, "text/plain", resp);
+    digitalWrite(ledPin, HIGH);
   });
   srv.on("/layout", HTTP_POST, handle_layout);
   srv.on("/layout", HTTP_GET, []() {
+    digitalWrite(ledPin, LOW);
     uint32_t size = measureJson(layout) + 1;
     char buf[size];
     serializeJson(layout, buf, size);
     srv.send(200, "application/json; charset=ibm437", buf);
+    digitalWrite(ledPin, HIGH);
   });
   srv.on("/states", HTTP_POST, handle_state_update);
   srv.on("/power", HTTP_POST, []() {
+    digitalWrite(ledPin, LOW);
     uint8_t val = ha_to_st(srv.arg("plain"));
     if (val == STATE_UNKNOWN) srv.send(400, "text/plain", "bad format");
     else {
       ddc.setPower(val == STATE_OK);
       srv.send(200, "text/plain", "ok");
     }
+    digitalWrite(ledPin, HIGH);
   });
   srv.on("/brightness", HTTP_POST, []() {
+    digitalWrite(ledPin, LOW);
     uint8_t brght = srv.arg("plain").toInt();
     ddc.setBrightness(brght);
     srv.send(200, "text/plain", "ok");
+    digitalWrite(ledPin, HIGH);
   });
   srv.on("/text", HTTP_POST, []() {
+    digitalWrite(ledPin, LOW);
     String text = srv.arg("plain");
     if (text.length() < 32) {
       strcpy(info_text, text.c_str());
       draw_status_bar_itext();
       srv.send(200, "text/plain", "ok");
     } else srv.send(400, "text/plain", "too long");
+    digitalWrite(ledPin, HIGH);
   });
 }
