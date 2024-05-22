@@ -18,3 +18,5 @@ const char * ota_pass = "CHANGE_ME_please";
 //#define COLOR_BARS
 
 const char * hostname = "info_tiles";
+
+const char * bootup_request_data_webhook = "";
