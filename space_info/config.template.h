@@ -19,4 +19,5 @@ const char * ota_pass = "CHANGE_ME_please";
 
 const char * hostname = "info_tiles";
 
+//#define USE_HTTPS_WEBHOOK
 const char * bootup_request_data_webhook = "";

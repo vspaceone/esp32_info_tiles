@@ -23,6 +23,9 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #include <WiFiUdp.h>
 #include <NTPClient.h>  //https://github.com/arduino-libraries/NTPClient
 #include <HTTPClient.h>
+#ifdef USE_HTTPS_WEBHOOK
+#include <WiFiClientSecure.h>
+#endif
 
 #include "config.h"
 
@@ -210,7 +213,13 @@ void setup() {
     HTTPClient http;
     Serial.print("Requesting current data... ");
     vga.print("Requesting current data... ");
+#ifdef USE_HTTPS_WEBHOOK
+    WiFiClientSecure* client = new WiFiClientSecure;
+    client->setInsecure();
+    http.begin(*client, bootup_request_data_webhook);
+#else
     http.begin(bootup_request_data_webhook);
+#endif
     const int code = http.GET();
     Serial.print(code);
     vga.print(code);
@@ -223,6 +232,7 @@ void setup() {
       vga.println(err);
     }
     http.end();
+    delete client;
   }
 
   vga.println("Waiting for data... ");
