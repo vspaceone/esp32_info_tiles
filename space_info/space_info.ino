@@ -220,7 +220,7 @@ void setup() {
 #else
     http.begin(bootup_request_data_webhook);
 #endif
-    const int code = http.POST();
+    const int code = http.POST(hostname);
     Serial.print(code);
     vga.print(code);
     if (code == HTTP_CODE_OK) {
