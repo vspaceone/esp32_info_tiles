@@ -33,7 +33,7 @@ VGA3Bit vga;
 WebServer srv;
 DDCVCP ddc;
 WiFiUDP ntpUDP;
-NTPClient ntp(ntpUDP);
+NTPClient ntp(ntpUDP,NTP_SERVER);
 
 auto color_ok = vga.RGB(0, 255, 0);
 auto color_bad = vga.RGB(255, 0, 255);

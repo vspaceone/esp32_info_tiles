@@ -13,8 +13,10 @@ const char* conf_pass = "PLEASE_change_me";
 
 const char * ota_pass = "CHANGE_ME_please";
 
+const char* NTP_SERVER = "pool.ntp.org";
+
 //#define TRANS_FLAG
-//#define LGBTQ_FLAG
+#define LGBTQ_FLAG
 //#define COLOR_BARS
 
 const char * hostname = "info_tiles";
