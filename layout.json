@@ -2,5 +2,7 @@
 	"binary_sensor.fenster_brucke_geschlossen":{"x":0,"y":0,"desc":["Fenster auf","der Brcke","geschlossen?"],"desc_bad":["Fenster auf","der Brcke","offen!"],"desc_ok":["Fenster auf","der Brcke","geschlossen."], "icon":"window_open", "icon_ok":"window"},
 	"binary_sensor.fenster_labor_geschlossen":{"x":1,"y":0,"desc":["Fenster im","Labor","geschlossen?"],"desc_bad":["Fenster im","Labor","offen!"],"desc_ok":["Fenster im","Labor","geschlossen."], "icon":"window_open", "icon_ok":"window"},
 	"binary_sensor.fenster_maschinenraum_geschlossen":{"x":2,"y":0, "desc":["Fenster im","Maschinenraum","offen?"], "desc_bad":["Fenster im","Maschinenraum","offen!"], "desc_ok":["Fenster im","Maschinenraum","geschlossen."], "icon":"window_open", "icon_ok":"window"},
-	"binary_sensor.dishwasher_is_clean":{"x":0,"y":1,"desc":["Splmaschine","wirklich","ausger„umt?"],"desc_bad":["Splmaschine","nicht","ausger„umt!"], "desc_ok":["Splmaschine","ist","ausger„umt."], "icon":"dishwasher_alert", "icon_ok":"dishwasher"}
+	"binary_sensor.dishwasher_is_clean":{"x":0,"y":1,"desc":["Splmaschine","wirklich","ausger„umt?"],"desc_bad":["Splmaschine","nicht","ausger„umt!"], "desc_ok":["Splmaschine","ist","ausger„umt."], "icon":"dishwasher_alert", "icon_ok":"dishwasher"},
+	"binary_sensor.watertest1_moisture":{"x":1,"y":1,"desc":["Brcke","k”nnte Leck","haben."],"desc_bad":["WASSERLECK","AUF","BRšCKE!"], "desc_ok":["Brcke","hat kein","Wasserleck."], "icon":"dishwasher_alert", "icon_ok":"dishwasher", "inverted":true},
+	"binary_sensor.watertest2_moisture":{"x":2,"y":1,"desc":["Boiler","k”nnte Leck","haben."],"desc_bad":["WASSERLECK","AM","BOILER!"], "desc_ok":["Boiler","hat kein","Wasserleck."], "icon":"dishwasher_alert", "icon_ok":"dishwasher", "inverted":true}
 }

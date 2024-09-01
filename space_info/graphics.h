@@ -57,6 +57,13 @@ bool draw_tile(String name, uint8_t state) {
   if (!layout.containsKey(name)) return false;
   if (!layout[name]["x"].is<uint8_t>() or !layout[name]["x"].is<uint8_t>()) return false;
 
+  if (layout[name]["inverted"] == true) {
+    switch(state){
+      case STATE_BAD: state = STATE_OK; break;
+      case STATE_OK: state = STATE_BAD; break;
+    }
+  }
+
   uint16_t x = layout[name]["x"].as<uint8_t>() * TILE_SIZE;
   uint16_t y = layout[name]["y"].as<uint8_t>() * TILE_SIZE;
   vga_color_t c = st_to_col(state);
