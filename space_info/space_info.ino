@@ -5,7 +5,7 @@ Layout is grid of tiles. Each tile has an icon and text. Status is shown as colo
 
 Homeassistant sends states via REST. Uses jinja templating of homeassistant to insert states.
 */
-
+#include <WiFi.h>
 #include <ESP32Lib.h>  //https://github.com/bitluni/ESP32Lib
 #ifdef USE_WM
 #include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager/
@@ -24,7 +24,7 @@ Homeassistant sends states via REST. Uses jinja templating of homeassistant to i
 #include <NTPClient.h>  //https://github.com/arduino-libraries/NTPClient
 #include <HTTPClient.h>
 #ifdef USE_HTTPS_WEBHOOK
-#include <WiFiClientSecure.h>
+#include <NetworkClientSecure.h>
 #endif
 
 #include "config.h"
@@ -214,7 +214,7 @@ void setup() {
     Serial.print("Requesting current data... ");
     vga.print("Requesting current data... ");
 #ifdef USE_HTTPS_WEBHOOK
-    WiFiClientSecure* client = new WiFiClientSecure;
+    NetworkClientSecure* client = new NetworkClientSecure;
     client->setInsecure();
     http.begin(*client, bootup_request_data_webhook);
 #else
