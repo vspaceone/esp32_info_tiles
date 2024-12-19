@@ -44,15 +44,6 @@ auto black = vga.RGB(0, 0, 0);
 uint16_t res_x = 384;
 uint16_t res_y = 272;
 
-const uint8_t ledPin = 33;
-const uint8_t redPin = 12;
-const uint8_t greenPin = 13;
-const uint8_t bluePin = 15;
-const uint8_t hsyncPin = 14;
-const uint8_t vsyncPin = 2;
-const uint8_t sdaPin = 16;
-const uint8_t sclPin = 0;
-
 #define TILE_SIZE 128  //each tile is 128x128
 String layout_path = "/layout.json";
 

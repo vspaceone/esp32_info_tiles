@@ -23,3 +23,23 @@ const char * hostname = "info_tiles";
 
 //#define USE_HTTPS_WEBHOOK
 const char * bootup_request_data_webhook = "";
+
+//ESP32Cam pins
+const uint8_t ledPin = 33;
+const uint8_t redPin = 12;
+const uint8_t greenPin = 13;
+const uint8_t bluePin = 15;
+const uint8_t hsyncPin = 14;
+const uint8_t vsyncPin = 2;
+const uint8_t sdaPin = 16;
+const uint8_t sclPin = 0;
+
+//ESP32 D1 Mini
+/*const uint8_t ledPin = 2;
+const uint8_t redPin = 26;
+const uint8_t greenPin = 18;
+const uint8_t bluePin = 19;
+const uint8_t hsyncPin = 23;
+const uint8_t vsyncPin = 5;
+const uint8_t sdaPin = 16;
+const uint8_t sclPin = 17;*/
